@@ -1,0 +1,17 @@
+{
+  "name": "com.argus.sdk",
+  "version": "0.1.0",
+  "displayName": "Argus Game QA SDK",
+  "description": "AI-native game QA — test-mode instrumentation and live telemetry for Unity.",
+  "unity": "2022.3",
+  "unityRelease": "0f1",
+  "documentationUrl": "https://argus.ludotronics.io/docs/sdk-unity",
+  "changelogUrl": "https://github.com/ludotronics/argus-devkit/releases",
+  "licensesUrl": "https://github.com/ludotronics/argus-devkit/blob/main/LICENSE",
+  "keywords": ["qa", "testing", "ai", "argus"],
+  "author": {
+    "name": "Argus",
+    "url": "https://argus.ludotronics.io"
+  },
+  "dependencies": {}
+}
