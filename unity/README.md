@@ -2,6 +2,15 @@
 
 AI-native game QA instrumentation for Unity 2022.3+.
 
+## Get this SDK
+
+- Source repository: `https://github.com/ludotronics/argus-devkit`
+- Unity package path: `unity/`
+- UPM Git URL:
+  - `https://github.com/ludotronics/argus-devkit.git?path=unity#main`
+
+For production, pin to a release tag or commit SHA instead of a floating branch.
+
 ## Quick start (5 minutes)
 
 ### 1. Install via UPM
@@ -66,6 +75,15 @@ ArgusSession.Event("level_complete", new { level = 3, time = 82.4f });
 ArgusSession.Purchase("gold_pack_100", 0.99m, "USD");
 ```
 
+### 6. CI/CD release gate
+
+```bash
+argus push build.apk --project my-game
+argus run --project my-game --persona explorer,completionist --budget 8
+```
+
+Set your pipeline to block on policy violations (for example, red scorecards or open critical bugs).
+
 ---
 
 ## Production (Live mode) setup
@@ -91,6 +109,46 @@ The SDK enforces hard limits and self-terminates if exceeded:
 | Battery  | < 1 %/hr |
 
 ---
+
+## Enterprise operations guidance
+
+### Environment separation
+
+- Use distinct API keys for `dev`, `staging`, and `production`.
+- Keep `Test` mode in non-production builds only.
+- Treat production key rotation as a scheduled runbook (recommended: 90 days).
+
+### Privacy controls
+
+- Enable `Require Consent Opt-In` for regions requiring explicit telemetry consent.
+- Avoid sending raw PII in custom event payloads.
+- Prefer stable pseudonymous IDs over direct user identifiers.
+
+### Observability baseline
+
+- Emit startup and session lifecycle events.
+- Track key gameplay markers (`match_start`, `match_end`, `purchase`, `crash`).
+- Validate telemetry throughput and dropped events during load tests.
+
+---
+
+## Troubleshooting
+
+### No telemetry in Live mode
+
+- Confirm `Mode = Live`.
+- Confirm `ArgusSession.SetConsent(true)` is called after opt-in when consent is required.
+- Confirm backend URL and project key are aligned.
+
+### Runs fail after upload
+
+- Uploaded build does not match target project or platform.
+- Build did not reach `ready` state in dashboard.
+
+### Unexpected overhead
+
+- Reduce event cardinality and payload size.
+- Move heavy custom serialization off the gameplay thread.
 
 ## Files
 

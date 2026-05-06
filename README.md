@@ -2,6 +2,18 @@
 
 Public developer toolkit for integrating Argus with game projects.
 
+## How to get the devkit
+
+- Repository: `https://github.com/ludotronics/argus-devkit`
+- Clone:
+  ```bash
+  git clone https://github.com/ludotronics/argus-devkit.git
+  ```
+- Download ZIP:
+  - `https://github.com/ludotronics/argus-devkit/archive/refs/heads/main.zip`
+
+For production workflows, prefer a tagged release or pinned commit instead of floating `main`.
+
 ## What is included
 
 | Component | Path | Purpose |
@@ -36,3 +48,9 @@ Argus integrations use three runtime modes:
 ## Versioning
 
 Devkit packages are versioned in lockstep with backend minor versions (`0.1.x` family with backend `0.1.x`).
+
+### Version pinning recommendations
+
+- Unity (UPM git URL): pin by tag or commit SHA.
+- Unreal/Godot (folder copy): track imported plugin/addon revision in your game repo.
+- Python: pin package versions in `requirements.txt` or lockfiles.
