@@ -45,6 +45,9 @@ namespace Argus.SDK
                     case "tap":
                         SimulateTap(cmd.x, cmd.y);
                         break;
+                    case "swipe":
+                        SimulateSwipe(cmd.x0, cmd.y0, cmd.x1, cmd.y1, cmd.duration);
+                        break;
                     case "key":
                         SimulateKey(cmd.key);
                         break;
@@ -76,6 +79,12 @@ namespace Argus.SDK
                 ExecuteEvents.Execute(r.gameObject, data, ExecuteEvents.pointerClickHandler);
                 break;
             }
+        }
+
+        private static void SimulateSwipe(float x0, float y0, float x1, float y1, float duration)
+        {
+            SimulateTap(x0, y0);
+            Debug.Log($"[Argus] Swipe command acknowledged from {x0:F2},{y0:F2} to {x1:F2},{y1:F2} over {duration:F2}s.");
         }
 
         private static void SimulateKey(string keyName)

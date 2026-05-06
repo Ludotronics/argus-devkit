@@ -1,10 +1,12 @@
 #pragma once
 
+#include "Dom/JsonObject.h"
+#include "Templates/SharedPointer.h"
+
 class FArgusAutomationBridge
 {
 public:
-    static const char* GetStateHashPlaceholder()
-    {
-        return "state_hash_unimplemented";
-    }
+    static FString CaptureStateHash();
+    static TSharedPtr<FJsonObject> CaptureState();
+    static bool AcceptCommand(const TSharedPtr<FJsonObject>& Command);
 };

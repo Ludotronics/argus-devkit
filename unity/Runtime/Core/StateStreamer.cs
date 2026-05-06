@@ -85,8 +85,13 @@ namespace Argus.SDK
             sb.Append(_seq++);
             sb.Append(",\"ts\":");
             sb.Append(Time.unscaledTimeAsDouble.ToString("F3"));
+            sb.Append(",\"state_hash\":\"");
+            sb.Append(BuildStateHash());
+            sb.Append("\"");
             sb.Append(",\"scene\":\"");
             sb.Append(SceneManager.GetActiveScene().name);
+            sb.Append("\",\"runtime\":");
+            sb.Append(ArgusSession.RuntimeMetadataJson);
             sb.Append("\",\"objects\":{");
 
             bool firstGo = true;
@@ -152,6 +157,17 @@ namespace Argus.SDK
                     return $"[{v2.x:F3},{v2.y:F3}]";
                 default:
                     return JsonUtility.ToJson(val);
+            }
+        }
+
+        private string BuildStateHash()
+        {
+            unchecked
+            {
+                var hash = 17;
+                hash = hash * 31 + SceneManager.GetActiveScene().name.GetHashCode();
+                hash = hash * 31 + _seq;
+                return hash.ToString("X");
             }
         }
 

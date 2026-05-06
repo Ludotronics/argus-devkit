@@ -19,6 +19,7 @@ namespace Argus.SDK
 
         public static ArgusSession Instance { get; private set; }
         public static ArgusMode Mode => Instance != null ? Instance.config.mode : ArgusMode.Off;
+        public static string RuntimeMetadataJson => Instance != null ? Instance.BuildRuntimeMetadataJson() : "{}";
 
         // Subsystems (lazy initialised per mode)
         private StateStreamer _stateStreamer;
@@ -92,7 +93,9 @@ namespace Argus.SDK
             _liveTelemetry.RecordEvent("sdk_health", new
             {
                 status = "initialized",
-                mode = "live"
+                mode = "live",
+                schema_version = "1.0.0",
+                runtime = RuntimeMetadataJson
             });
         }
 
@@ -126,6 +129,20 @@ namespace Argus.SDK
         {
             if (Mode == ArgusMode.Live)
                 Instance?._liveTelemetry?.SetConsent(granted);
+        }
+
+        private string BuildRuntimeMetadataJson()
+        {
+            var orientation = Screen.width >= Screen.height ? "landscape" : "portrait";
+            return "{" +
+                   "\"engine\":\"unity\"," +
+                   $"\"engine_version\":\"{Application.unityVersion}\"," +
+                   $"\"platform\":\"{Application.platform.ToString().ToLowerInvariant()}\"," +
+                   $"\"package_id\":\"{Application.identifier}\"," +
+                   $"\"orientation\":\"{orientation}\"," +
+                   "\"sdk_schema_version\":\"1.0.0\"," +
+                   $"\"sdk_mode\":\"{config.mode.ToString().ToLowerInvariant()}\"" +
+                   "}";
         }
     }
 }
