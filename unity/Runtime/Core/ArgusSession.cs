@@ -89,6 +89,11 @@ namespace Argus.SDK
 
             _killSwitch.Init(config);
             _liveTelemetry.Init(config);
+            _liveTelemetry.RecordEvent("sdk_health", new
+            {
+                status = "initialized",
+                mode = "live"
+            });
         }
 
         private void OnDestroy()

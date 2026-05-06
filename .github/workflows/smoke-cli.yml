@@ -1,0 +1,26 @@
+name: smoke-cli
+
+on:
+  push:
+    paths:
+      - "cli/**"
+      - ".github/workflows/smoke-cli.yml"
+  pull_request:
+    paths:
+      - "cli/**"
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Python syntax check
+        run: python -m py_compile cli/src/main.py
+      - name: CLI command smoke checks
+        run: |
+          python cli/src/main.py --help
+          python cli/src/main.py doctor
+          python cli/src/main.py verify-manifest --path missing.yaml || true

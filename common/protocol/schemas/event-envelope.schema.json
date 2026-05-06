@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://argus.dev/schemas/event-envelope.schema.json",
+  "title": "Argus Live Ingest Event Envelope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "sdk_name",
+    "sdk_version",
+    "engine",
+    "engine_version",
+    "platform",
+    "project_id",
+    "session_id",
+    "privacy_mode",
+    "event_type",
+    "payload"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "enum": ["1.0.0"]
+    },
+    "sdk_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z][a-z0-9_-]*$"
+    },
+    "sdk_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "engine": {
+      "type": "string",
+      "enum": ["unity", "unreal", "godot", "web", "python"]
+    },
+    "engine_version": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128
+    },
+    "platform": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "session_id": {
+      "type": "string",
+      "minLength": 4,
+      "maxLength": 128
+    },
+    "privacy_mode": {
+      "type": "string",
+      "enum": ["live", "test", "off", "anonymous"]
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "event",
+        "metric",
+        "perf",
+        "crash",
+        "breadcrumb",
+        "state_snapshot",
+        "replay_marker",
+        "sdk_health"
+      ]
+    },
+    "payload": {
+      "type": "object"
+    }
+  }
+}

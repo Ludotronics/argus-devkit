@@ -19,6 +19,9 @@ argus run --persona Speedrunner --duration 30m --build latest
 argus replay BUG-112
 argus bisect BUG-112
 argus status
+argus verify-manifest --path argus.plugin.yaml
+argus send-heartbeat --backend https://api.argus.ludotronics.io --project-id my-game --api-key argus_stk_xxx
+argus doctor --backend https://api.argus.ludotronics.io --project-id my-game --api-key argus_stk_xxx
 ```
 
 ## Notes

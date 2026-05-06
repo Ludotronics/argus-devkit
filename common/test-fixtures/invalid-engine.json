@@ -1,0 +1,13 @@
+{
+  "schema_version": "1.0.0",
+  "sdk_name": "argus-test",
+  "sdk_version": "0.1.0",
+  "engine": "invalid-engine",
+  "engine_version": "1.0",
+  "platform": "server",
+  "project_id": "demo-project",
+  "session_id": "sess_bad",
+  "privacy_mode": "live",
+  "event_type": "event",
+  "payload": {}
+}

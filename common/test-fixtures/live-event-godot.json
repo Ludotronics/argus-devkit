@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "sdk_name": "argus-godot",
+  "sdk_version": "0.1.0",
+  "engine": "godot",
+  "engine_version": "4.2",
+  "platform": "linux",
+  "project_id": "demo-project",
+  "session_id": "sess_godot_001",
+  "privacy_mode": "live",
+  "event_type": "sdk_health",
+  "payload": {
+    "queue_depth": 0,
+    "last_flush_ok": true,
+    "dropped_events": 0
+  }
+}

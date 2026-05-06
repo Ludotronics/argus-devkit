@@ -1,0 +1,27 @@
+{
+  "FileVersion": 3,
+  "Version": 1,
+  "VersionName": "0.1.0",
+  "FriendlyName": "Argus",
+  "Description": "Argus Unreal SDK MVP plugin.",
+  "Category": "Analytics",
+  "EnabledByDefault": false,
+  "CanContainContent": true,
+  "Modules": [
+    {
+      "Name": "ArgusRuntime",
+      "Type": "Runtime",
+      "LoadingPhase": "Default"
+    },
+    {
+      "Name": "ArgusEditor",
+      "Type": "Editor",
+      "LoadingPhase": "Default"
+    },
+    {
+      "Name": "ArgusDeveloper",
+      "Type": "Developer",
+      "LoadingPhase": "Default"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://argus.dev/schemas/event-payloads.schema.json",
+  "title": "Argus payload hints per event_type",
+  "description": "Informational schema — servers may only enforce envelope + payload size.",
+  "type": "object",
+  "properties": {
+    "event": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "properties": { "type": "object" }
+      }
+    },
+    "metric": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "value": { "type": "number" },
+        "unit": { "type": "string" }
+      }
+    },
+    "perf": {
+      "type": "object",
+      "properties": {
+        "fps_p50": { "type": "number" },
+        "fps_p95": { "type": "number" },
+        "fps_p99": { "type": "number" },
+        "memory_mb": { "type": "number" }
+      }
+    },
+    "crash": {
+      "type": "object",
+      "properties": {
+        "message": { "type": "string" },
+        "stack_trace": { "type": "string" },
+        "type": { "type": "string" }
+      }
+    },
+    "sdk_health": {
+      "type": "object",
+      "properties": {
+        "queue_depth": { "type": "integer" },
+        "last_flush_ok": { "type": "boolean" },
+        "dropped_events": { "type": "integer" }
+      }
+    }
+  }
+}

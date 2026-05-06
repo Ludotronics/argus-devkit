@@ -12,6 +12,7 @@ from __future__ import annotations
 import logging
 import threading
 import time
+import uuid
 from typing import Any
 
 import httpx
@@ -33,8 +34,8 @@ class Argus:
         sdk.metric("fps_avg", 57.3)
     """
 
-    _BASE_PATH = "/v1/sdk/live/ingest"
-    _CONFIG_PATH = "/v1/sdk/config"
+    _BASE_PATH = "/sdk/live/ingest"
+    _CONFIG_PATH = "/sdk/config"
     _HEARTBEAT_INTERVAL = 60  # seconds
 
     def __init__(
@@ -51,6 +52,7 @@ class Argus:
         self._enabled = True
         self._client: httpx.Client | None = None
         self._heartbeat_thread: threading.Thread | None = None
+        self._session_id = uuid.uuid4().hex
 
     # ── Lifecycle ──────────────────────────────────────────────────────────────
 
@@ -59,7 +61,7 @@ class Argus:
         self._client = httpx.Client(
             base_url=self._base_url,
             headers={
-                "Authorization": f"Bearer {self._api_key}",
+                "X-Argus-Key": self._api_key,
                 "X-Argus-Project": self._project_id,
                 "Content-Type": "application/json",
             },
@@ -83,13 +85,13 @@ class Argus:
         """Emit a named gameplay event with optional properties."""
         if not self._enabled:
             return
-        self._post({"type": "event", "name": name, "properties": properties or {}})
+        self._post(self._build_envelope("event", {"name": name, "properties": properties or {}}))
 
     def metric(self, name: str, value: float, tags: dict[str, str] | None = None) -> None:
         """Emit a numeric performance or gameplay metric."""
         if not self._enabled:
             return
-        self._post({"type": "metric", "name": name, "value": value, "tags": tags or {}})
+        self._post(self._build_envelope("metric", {"name": name, "value": value, "tags": tags or {}}))
 
     # ── Internal ───────────────────────────────────────────────────────────────
 
@@ -97,7 +99,7 @@ class Argus:
         if not self._client:
             return
         try:
-            self._client.post(self._BASE_PATH, json=payload)
+            self._client.post(self._BASE_PATH, json=[payload])
         except Exception:
             log.debug("Argus: ingest call failed — SDK is fail-closed, continuing silently")
 
@@ -116,3 +118,18 @@ class Argus:
         while self._enabled:
             time.sleep(self._HEARTBEAT_INTERVAL)
             self._fetch_config()
+
+    def _build_envelope(self, event_type: str, payload: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "schema_version": "1.0.0",
+            "sdk_name": "argus-python",
+            "sdk_version": "0.1.0",
+            "engine": "python",
+            "engine_version": "3",
+            "platform": "server",
+            "project_id": self._project_id,
+            "session_id": self._session_id,
+            "privacy_mode": "live",
+            "event_type": event_type,
+            "payload": {**payload, "ts": int(time.time() * 1000)},
+        }

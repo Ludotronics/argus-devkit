@@ -20,8 +20,11 @@ namespace Argus.SDK
         [Tooltip("Your Argus project API key.")]
         public string apiKey = "";
 
+        [Tooltip("Your Argus project ID.")]
+        public string projectId = "";
+
         [Tooltip("Argus backend URL.")]
-        public string backendUrl = "https://api.argus.dev";
+        public string backendUrl = "https://api.argus.ludotronics.io";
 
         [Header("Mode")]
         [Tooltip("Off = disabled, Test = dev/CI instrumentation, Live = production telemetry.")]

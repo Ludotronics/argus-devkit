@@ -1,0 +1,42 @@
+name: smoke-protocol
+
+on:
+  push:
+    paths:
+      - "common/protocol/**"
+      - "common/manifest/**"
+      - ".github/workflows/smoke-protocol.yml"
+  pull_request:
+    paths:
+      - "common/protocol/**"
+      - "common/manifest/**"
+
+jobs:
+  schema-json:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate JSON files parse
+        run: |
+          python - <<'PY'
+          import json, pathlib
+          for p in pathlib.Path("common").rglob("*.json"):
+              json.loads(p.read_text())
+          print("schemas parse ok")
+          PY
+      - name: Validate fixture envelope keys
+        run: |
+          python - <<'PY'
+          import json, pathlib, sys
+          required = {
+            "schema_version","sdk_name","sdk_version","engine","engine_version",
+            "platform","project_id","session_id","privacy_mode","event_type","payload",
+          }
+          for p in pathlib.Path("common/test-fixtures").glob("live-event-*.json"):
+            payload = json.loads(p.read_text())
+            missing = sorted(required - payload.keys())
+            if missing:
+              print(f"{p}: missing keys {missing}")
+              sys.exit(1)
+          print("fixture envelope keys ok")
+          PY

@@ -20,7 +20,11 @@ Add to your project's `Packages/manifest.json`:
 
 **Assets > Create > Argus > Config**
 
-Set your **API Key** and choose a **Mode**:
+Set your **API Key**, **Project ID**, backend URL, and choose a **Mode**:
+
+```text
+Backend URL: https://api.argus.ludotronics.io
+```
 
 | Mode   | When to use                                     |
 |--------|-------------------------------------------------|

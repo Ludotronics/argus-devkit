@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://argus.dev/schemas/argus-plugin.schema.json",
+  "title": "Argus plugin manifest (argus.plugin.yaml)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["argus_manifest_version", "engine", "mode"],
+  "properties": {
+    "argus_manifest_version": {
+      "type": "string",
+      "enum": ["1.0.0"]
+    },
+    "engine": {
+      "type": "string",
+      "enum": ["unity", "unreal", "godot", "web", "python", "unknown"]
+    },
+    "engine_version_hint": {
+      "type": "string",
+      "maxLength": 128,
+      "description": "Optional editor/engine version detected at init time."
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["Off", "Test", "Live"]
+    },
+    "project_id": {
+      "type": "string",
+      "maxLength": 256
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "live_telemetry": { "type": "boolean" },
+        "killswitch": { "type": "boolean" },
+        "flags": { "type": "boolean" },
+        "state_capture": { "type": "boolean" },
+        "input_injection": { "type": "boolean" },
+        "save_load_hooks": { "type": "boolean" },
+        "screenshot": { "type": "boolean" },
+        "replay": { "type": "boolean" },
+        "privacy_redaction": { "type": "boolean" }
+      }
+    },
+    "personas": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 64 },
+      "maxItems": 32
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_run_usd": { "type": "number", "minimum": 0 },
+        "max_duration_hours": { "type": "number", "minimum": 0 }
+      }
+    },
+    "invariants": {
+      "type": "array",
+      "items": { "type": "string", "maxLength": 512 },
+      "maxItems": 64
+    }
+  }
+}

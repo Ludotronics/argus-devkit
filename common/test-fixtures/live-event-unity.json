@@ -1,0 +1,18 @@
+{
+  "schema_version": "1.0.0",
+  "sdk_name": "argus-unity",
+  "sdk_version": "0.1.0",
+  "engine": "unity",
+  "engine_version": "2022.3.0f1",
+  "platform": "android",
+  "project_id": "demo-project",
+  "session_id": "sess_unity_001",
+  "privacy_mode": "live",
+  "event_type": "event",
+  "payload": {
+    "name": "level_start",
+    "properties": {
+      "level": "forest_01"
+    }
+  }
+}

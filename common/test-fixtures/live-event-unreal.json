@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0.0",
+  "sdk_name": "argus-unreal",
+  "sdk_version": "0.1.0",
+  "engine": "unreal",
+  "engine_version": "5.4",
+  "platform": "windows",
+  "project_id": "demo-project",
+  "session_id": "sess_ue_001",
+  "privacy_mode": "live",
+  "event_type": "perf",
+  "payload": {
+    "fps_p50": 60.0,
+    "fps_p95": 58.0,
+    "fps_p99": 55.0
+  }
+}

@@ -21,6 +21,7 @@ namespace Argus.SDK
     [DisallowMultipleComponent]
     public class LiveTelemetry : MonoBehaviour
     {
+        private const int MaxQueuedEvents = 500;
         private ArgusConfig _config;
         private bool _consentGranted;
         private readonly List<float> _fpsHistory = new List<float>(256);
@@ -51,13 +52,13 @@ namespace Argus.SDK
         public void RecordEvent(string name, object props)
         {
             if (!_consentGranted) return;
-            var json = JsonUtility.ToJson(new EventPayload
+            var payloadJson = JsonUtility.ToJson(new EventPayload
             {
                 name  = name,
                 ts    = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
                 props = props?.ToString() ?? "{}",
             });
-            _eventQueue.Enqueue(json);
+            EnqueueEnvelope("event", payloadJson);
         }
 
         // ---------------------------------------------------------------
@@ -106,7 +107,12 @@ namespace Argus.SDK
                 float p50 = Percentile(sorted, 0.50f);
                 float p95 = Percentile(sorted, 0.95f);
                 float p99 = Percentile(sorted, 0.99f);
-                events.Add($"{{\"name\":\"perf\",\"ts\":{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()},\"fps_p50\":{p50:F1},\"fps_p95\":{p95:F1},\"fps_p99\":{p99:F1}}}");
+                events.Add(
+                    BuildEnvelopeJson(
+                        "perf",
+                        $"{{\"fps_p50\":{p50:F1},\"fps_p95\":{p95:F1},\"fps_p99\":{p99:F1},\"ts\":{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}}}"
+                    )
+                );
                 _fpsHistory.Clear();
             }
 
@@ -121,6 +127,7 @@ namespace Argus.SDK
             req.downloadHandler = new DownloadHandlerBuffer();
             req.SetRequestHeader("Content-Type", "application/json");
             req.SetRequestHeader("X-Argus-Key", _config.apiKey);
+            req.SetRequestHeader("X-Argus-Project", _config.projectId);
             req.SetRequestHeader("X-Argus-Session", _sessionId);
             req.timeout = 10;
             yield return req.SendWebRequest();
@@ -162,6 +169,39 @@ namespace Argus.SDK
             public string name;
             public long   ts;
             public string props;
+        }
+
+        private void EnqueueEnvelope(string eventType, string payloadJson)
+        {
+            if (_eventQueue.Count >= MaxQueuedEvents)
+            {
+                _eventQueue.Dequeue();
+            }
+            _eventQueue.Enqueue(BuildEnvelopeJson(eventType, payloadJson));
+        }
+
+        private string BuildEnvelopeJson(string eventType, string payloadJson)
+        {
+            var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            return "{" +
+                   $"\"schema_version\":\"1.0.0\"," +
+                   $"\"sdk_name\":\"argus-unity\"," +
+                   $"\"sdk_version\":\"0.1.0\"," +
+                   $"\"engine\":\"unity\"," +
+                   $"\"engine_version\":\"{Escape(Application.unityVersion)}\"," +
+                   $"\"platform\":\"{Escape(Application.platform.ToString().ToLowerInvariant())}\"," +
+                   $"\"project_id\":\"{Escape(_config.projectId)}\"," +
+                   $"\"session_id\":\"{Escape(_sessionId)}\"," +
+                   $"\"privacy_mode\":\"live\"," +
+                   $"\"event_type\":\"{Escape(eventType)}\"," +
+                   $"\"payload\":{payloadJson}," +
+                   $"\"ts\":{now}" +
+                   "}";
+        }
+
+        private static string Escape(string value)
+        {
+            return (value ?? string.Empty).Replace("\\", "\\\\").Replace("\"", "\\\"");
         }
     }
 }
