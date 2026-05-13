@@ -1,7 +1,9 @@
 {
   "name": "Argus.Runtime",
   "rootNamespace": "Argus.SDK",
-  "references": [],
+  "references": [
+    "NativeWebSocket"
+  ],
   "includePlatforms": [],
   "excludePlatforms": [],
   "allowUnsafeCode": false,

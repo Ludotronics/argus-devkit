@@ -75,6 +75,7 @@ namespace Argus.SDK
             _stateStreamer  = gameObject.AddComponent<StateStreamer>();
             _inputInjector  = gameObject.AddComponent<InputInjector>();
             _rngCapture     = gameObject.AddComponent<RngCapture>();
+            gameObject.AddComponent<ArgusMultimodalOracle>();
 
             _killSwitch.Init(config);
             _stateStreamer.Init(config);

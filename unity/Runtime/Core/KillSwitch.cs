@@ -21,6 +21,8 @@ namespace Argus.SDK
         private const float TrustWindowSecs  = 300f;   // tolerate backend outage for 5m
 
         private float _lastSuccessTime;
+        private string _sessionToken;
+        private float _sessionTokenExpiresAt;
 
         public void Init(ArgusConfig config)
         {
@@ -42,13 +44,15 @@ namespace Argus.SDK
 
         private IEnumerator Check()
         {
+            yield return StartCoroutine(EnsureSessionToken());
             var url = $"{_config.backendUrl}/sdk/killswitch" +
                       $"?app={Application.identifier}" +
                       $"&ver={Application.version}" +
                       $"&mode={_config.mode.ToString().ToLower()}";
 
             using var req = UnityWebRequest.Get(url);
-            req.SetRequestHeader("X-Argus-Key", _config.apiKey);
+            if (!string.IsNullOrEmpty(_sessionToken))
+                req.SetRequestHeader("X-Argus-Key", _sessionToken);
             req.timeout = 5;
             yield return req.SendWebRequest();
 
@@ -73,6 +77,40 @@ namespace Argus.SDK
             }
         }
 
+        private IEnumerator EnsureSessionToken()
+        {
+            if (!string.IsNullOrEmpty(_sessionToken) && Time.realtimeSinceStartup < _sessionTokenExpiresAt - 60f)
+                yield break;
+
+            var mode = _config.mode == ArgusMode.Test ? "test" : "live";
+            var body = $"{{\"project_id\":\"{Escape(_config.projectId)}\",\"sdk_key\":\"{Escape(_config.apiKey)}\",\"mode\":\"{mode}\"}}";
+            var bytes = System.Text.Encoding.UTF8.GetBytes(body);
+            using var req = new UnityWebRequest($"{_config.backendUrl}/sdk/session", "POST");
+            req.uploadHandler = new UploadHandlerRaw(bytes);
+            req.downloadHandler = new DownloadHandlerBuffer();
+            req.SetRequestHeader("Content-Type", "application/json");
+            req.timeout = 10;
+            yield return req.SendWebRequest();
+
+            if (req.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogWarning($"[Argus] Unable to mint SDK session token for kill switch: {req.responseCode} {req.error}");
+                yield break;
+            }
+
+            var response = JsonUtility.FromJson<SessionResponse>(req.downloadHandler.text);
+            if (response == null || string.IsNullOrEmpty(response.token))
+                yield break;
+
+            _sessionToken = response.token;
+            _sessionTokenExpiresAt = Time.realtimeSinceStartup + Mathf.Max(300, response.expires_in_seconds);
+        }
+
+        private static string Escape(string value)
+        {
+            return (value ?? string.Empty).Replace("\\", "\\\\").Replace("\"", "\\\"");
+        }
+
         private void Shutdown()
         {
             // Destroy all SDK components but leave the game untouched
@@ -89,6 +127,13 @@ namespace Argus.SDK
         {
             public bool   enabled = true;
             public string mode    = "live";
+        }
+
+        [System.Serializable]
+        private class SessionResponse
+        {
+            public string token;
+            public int expires_in_seconds;
         }
     }
 }

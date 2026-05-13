@@ -26,9 +26,8 @@ namespace Argus.SDK
                 OnSaveRequested.Invoke(slot);
                 return;
             }
-            // Default: capture scene name + basic Transform snapshots
             _slots[slot] = CaptureDefault();
-            Debug.Log($"[Argus] State saved to slot {slot}");
+            Debug.Log($"[Argus] State saved to slot {slot} (rng_seed={RngCapture.CapturedSeed})");
         }
 
         public static void LoadSlot(int slot)
@@ -41,18 +40,31 @@ namespace Argus.SDK
             if (_slots.TryGetValue(slot, out var data))
             {
                 SceneManager.LoadScene(data.sceneName);
-                Debug.Log($"[Argus] State loaded from slot {slot} (scene reload)");
+                Debug.Log($"[Argus] State loaded from slot {slot} (scene reload). Snapshot hash was {data.stateHash}");
             }
         }
 
         private static SaveSlotData CaptureDefault()
         {
-            return new SaveSlotData { sceneName = SceneManager.GetActiveScene().name };
+            var data = new SaveSlotData
+            {
+                sceneName = SceneManager.GetActiveScene().name,
+                rngSeed = RngCapture.CapturedSeed,
+            };
+            if (AutomationBridgeRegistry.TryGet(out var bridge))
+            {
+                data.gameStateJson = bridge.GetStateSnapshotJson();
+                data.stateHash = bridge.GetStateHash();
+            }
+            return data;
         }
 
         private class SaveSlotData
         {
             public string sceneName;
+            public int rngSeed;
+            public string gameStateJson;
+            public string stateHash;
         }
     }
 }

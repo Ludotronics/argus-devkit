@@ -28,6 +28,8 @@ namespace Argus.SDK
         private readonly Queue<string> _eventQueue = new Queue<string>();
         private int _netBytesUsed;
         private string _sessionId;
+        private string _sessionToken;
+        private float _sessionTokenExpiresAt;
 
         public void Init(ArgusConfig config)
         {
@@ -39,6 +41,7 @@ namespace Argus.SDK
 
             Application.logMessageReceived += OnLog;
             StartCoroutine(FpsSampler());
+            StartCoroutine(FlushSoon());
             StartCoroutine(FlushLoop());
         }
 
@@ -81,6 +84,16 @@ namespace Argus.SDK
         // Flush loop — batch send every 60s
         // ---------------------------------------------------------------
 
+        private IEnumerator FlushSoon()
+        {
+            yield return new WaitForSeconds(2f);
+            if (_consentGranted && _netBytesUsed < _config.maxNetKb * 1024)
+            {
+                yield return StartCoroutine(EnsureSessionToken());
+                yield return StartCoroutine(Flush());
+            }
+        }
+
         private IEnumerator FlushLoop()
         {
             yield return new WaitForSeconds(10f); // initial delay
@@ -89,8 +102,41 @@ namespace Argus.SDK
                 yield return new WaitForSeconds(60f);
                 if (!_consentGranted) continue;
                 if (_netBytesUsed >= _config.maxNetKb * 1024) continue;
+                yield return StartCoroutine(EnsureSessionToken());
                 yield return StartCoroutine(Flush());
             }
+        }
+
+        private IEnumerator EnsureSessionToken()
+        {
+            if (!string.IsNullOrEmpty(_sessionToken) && Time.realtimeSinceStartup < _sessionTokenExpiresAt - 60f)
+                yield break;
+
+            var mode = _config.mode == ArgusMode.Test ? "test" : "live";
+            var body = $"{{\"project_id\":\"{Escape(_config.projectId)}\",\"sdk_key\":\"{Escape(_config.apiKey)}\",\"mode\":\"{mode}\"}}";
+            var bytes = Encoding.UTF8.GetBytes(body);
+            using var req = new UnityWebRequest($"{_config.backendUrl}/sdk/session", "POST");
+            req.uploadHandler = new UploadHandlerRaw(bytes);
+            req.downloadHandler = new DownloadHandlerBuffer();
+            req.SetRequestHeader("Content-Type", "application/json");
+            req.timeout = 10;
+            yield return req.SendWebRequest();
+
+            if (req.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogWarning($"[Argus] Unable to mint SDK session token: {req.responseCode} {req.error}");
+                yield break;
+            }
+
+            var response = JsonUtility.FromJson<SessionResponse>(req.downloadHandler.text);
+            if (response == null || string.IsNullOrEmpty(response.token))
+            {
+                Debug.LogWarning("[Argus] SDK session response did not include a token.");
+                yield break;
+            }
+
+            _sessionToken = response.token;
+            _sessionTokenExpiresAt = Time.realtimeSinceStartup + Mathf.Max(300, response.expires_in_seconds);
         }
 
         private IEnumerator Flush()
@@ -126,7 +172,11 @@ namespace Argus.SDK
             req.uploadHandler   = new UploadHandlerRaw(bytes);
             req.downloadHandler = new DownloadHandlerBuffer();
             req.SetRequestHeader("Content-Type", "application/json");
-            req.SetRequestHeader("X-Argus-Key", _config.apiKey);
+            if (string.IsNullOrEmpty(_sessionToken))
+            {
+                yield break;
+            }
+            req.SetRequestHeader("X-Argus-Key", _sessionToken);
             req.SetRequestHeader("X-Argus-Project", _config.projectId);
             req.SetRequestHeader("X-Argus-Session", _sessionId);
             req.timeout = 10;
@@ -169,6 +219,13 @@ namespace Argus.SDK
             public string name;
             public long   ts;
             public string props;
+        }
+
+        [Serializable]
+        private class SessionResponse
+        {
+            public string token;
+            public int expires_in_seconds;
         }
 
         private void EnqueueEnvelope(string eventType, string payloadJson)

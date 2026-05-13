@@ -125,7 +125,26 @@ namespace Argus.SDK
                 }
                 sb.Append("}");
             }
-            sb.Append("}}");
+            sb.Append("}");
+            if (AutomationBridgeRegistry.TryGet(out var bridge))
+            {
+                sb.Append(",\"game_state\":");
+                sb.Append(bridge.GetStateSnapshotJson());
+                sb.Append(",\"legal_actions\":");
+                sb.Append(bridge.GetLegalActionsJson());
+            }
+            var oracle = ArgusSession.Instance != null
+                ? ArgusSession.Instance.GetComponent<ArgusMultimodalOracle>()
+                : null;
+            if (oracle != null)
+            {
+                sb.Append(",\"multimodal\":{");
+                sb.Append("\"delta_ms\":").Append(oracle.LastDeltaTimeMs.ToString("F2"));
+                sb.Append(",\"spike_ema_ms\":").Append(oracle.SpikeEmaMs.ToString("F2"));
+                sb.Append(",\"spike_count\":").Append(oracle.SpikeCount);
+                sb.Append("}");
+            }
+            sb.Append("}");
             return sb.ToString();
         }
 
@@ -162,6 +181,8 @@ namespace Argus.SDK
 
         private string BuildStateHash()
         {
+            if (AutomationBridgeRegistry.TryGet(out var bridge))
+                return bridge.GetStateHash();
             unchecked
             {
                 var hash = 17;

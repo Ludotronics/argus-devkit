@@ -39,6 +39,17 @@ namespace Argus.SDK
         {
             try
             {
+                if (AutomationBridgeRegistry.TryGet(out var bridge))
+                {
+                    var trimmed = json.TrimStart();
+                    if (trimmed.StartsWith("{") && !LooksLikeLegacyCommand(trimmed))
+                    {
+                        var result = bridge.ApplySemanticAction(json);
+                        Debug.Log($"[Argus] semantic result: {result}");
+                        return;
+                    }
+                }
+
                 var cmd = JsonUtility.FromJson<ActionCommand>(json);
                 switch (cmd.action)
                 {
@@ -57,6 +68,13 @@ namespace Argus.SDK
                     case "load_state":
                         SaveStateManager.LoadSlot(cmd.slot);
                         break;
+                    case "semantic":
+                        if (AutomationBridgeRegistry.TryGet(out var br))
+                            Debug.Log($"[Argus] semantic: {br.ApplySemanticAction(string.IsNullOrEmpty(cmd.payload) ? "{}" : cmd.payload)}");
+                        break;
+                    case "wait":
+                        // Runner pacing; optional no-op when no bridge handles it.
+                        break;
                     default:
                         Debug.LogWarning($"[Argus] Unknown action: {cmd.action}");
                         break;
@@ -66,6 +84,16 @@ namespace Argus.SDK
             {
                 Debug.LogWarning($"[Argus] InputInjector parse error: {ex.Message}");
             }
+        }
+
+        private static bool LooksLikeLegacyCommand(string json)
+        {
+            return json.Contains("\"action\":\"tap\"") ||
+                   json.Contains("\"action\":\"swipe\"") ||
+                   json.Contains("\"action\":\"key\"") ||
+                   json.Contains("\"action\":\"save_state\"") ||
+                   json.Contains("\"action\":\"load_state\"") ||
+                   json.Contains("\"action\":\"semantic\"");
         }
 
         private static void SimulateTap(float normX, float normY)
@@ -100,6 +128,7 @@ namespace Argus.SDK
         private class ActionCommand
         {
             public string action;
+            public string payload;
             public float  x, y, x0, y0, x1, y1, duration, value, seconds;
             public string key, axis;
             public int    slot;
