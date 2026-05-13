@@ -13,5 +13,7 @@
     "name": "Argus",
     "url": "https://argus.ludotronics.io"
   },
-  "dependencies": {}
+  "dependencies": {
+    "com.endel.nativewebsocket": "https://github.com/endel/NativeWebSocket.git#upm-2"
+  }
 }

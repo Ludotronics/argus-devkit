@@ -11,9 +11,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
-using NativeWebSocket;   // com.endel.nativewebsocket (added to UPM deps on init)
 using UnityEngine;
 using UnityEngine.SceneManagement;
+#if ARGUS_NATIVE_WEBSOCKET
+using NativeWebSocket;
+#endif
 
 namespace Argus.SDK
 {
@@ -21,7 +23,9 @@ namespace Argus.SDK
     public class StateStreamer : MonoBehaviour
     {
         private ArgusConfig _config;
+#if ARGUS_NATIVE_WEBSOCKET
         private WebSocket _ws;
+#endif
         private int _seq;
         private bool _connected;
 
@@ -38,6 +42,10 @@ namespace Argus.SDK
 
         private IEnumerator ConnectLoop()
         {
+#if !ARGUS_NATIVE_WEBSOCKET
+            Debug.LogWarning("[Argus] Test mode requires NativeWebSocket. Install com.endel.nativewebsocket and add ARGUS_NATIVE_WEBSOCKET to Player Settings > Scripting Define Symbols.");
+            yield break;
+#else
             while (true)
             {
                 _ws = new WebSocket($"ws://localhost:{_config.testWsPort}/sdk/state");
@@ -61,6 +69,7 @@ namespace Argus.SDK
                     yield return null;
                 }
             }
+#endif
         }
 
         // ---------------------------------------------------------------
@@ -192,6 +201,11 @@ namespace Argus.SDK
             }
         }
 
-        private void OnDestroy() => _ws?.Close();
+        private void OnDestroy()
+        {
+#if ARGUS_NATIVE_WEBSOCKET
+            _ws?.Close();
+#endif
+        }
     }
 }
